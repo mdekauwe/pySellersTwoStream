@@ -497,6 +497,6 @@ class twoStream(leafGeometry,canopyStructure):
 if __name__=="__main__":
 
   def test():
-    print >> sys.stderr, "Write a test function!"
+    sys.stderr.write("Write a test function!\n")
 
   test()
