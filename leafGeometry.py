@@ -3,7 +3,7 @@
 
 Implements various leaf inclination functions for
 use in the sellersTwoStream code.
-    
+
 Copyright (C) 2016 Tristan Quaife
 
 This program is free software; you can redistribute it and/or modify
@@ -39,19 +39,19 @@ class leafGeometry( ):
     """This class implements various leaf geometry functions.
 
     Currently contains:
-    
-    G function as implemented in JULES (using analytical solutions 
+
+    G function as implemented in JULES (using analytical solutions
     to a small number of distributions)
-    
+
     G function as implemented in CLM (Goudrian-type parameterisation)
     """
     self.CLM_chiL=0.01
     self.JULES_lad='uniform'
-    
+
     self.gDash=self.gDash_bunnik_spherical
 
   def gDash(self, mu):
-    pass    
+    pass
 
   def gDash_bunnik_spherical(self, mu):
     """Spherical distribution from Bunnik.
@@ -89,13 +89,13 @@ class leafGeometry( ):
     """Ross Psi function for azimuthally unifrom distributions.
     Allows the G function to be computed using only a single integral
     from 0-pi/2 of gDash*rossPsi.
-    
+
     Main form of Psi taken from Knyazikhin, Myneni and Stenberg (2004)
     additional checks taken from SemiDescrete code by Gobron et al. (1997)
     """
     theta=np.arccos(mu)
     thetaL=np.arccos(muL)
-  
+
     #Preliminary checks:
     if muL==1.:
       return mu
@@ -103,39 +103,39 @@ class leafGeometry( ):
       return muL
     if np.sin(thetaL)==0:
       testVal=0.0
-    else: 
+    else:
       testVal=mu*muL
-  
+
     #The Ross Psi function:
     if testVal>=(np.sin(theta)*np.sin(thetaL)):
       psi=np.abs(mu*muL)
     else:
       cotProduct=-1./np.tan(theta)*1./np.tan(thetaL)
-      
+
       #need this to catch some numerical errors:
       #(cotProduct is sometimes very very slightly >1.)
       if cotProduct<=-1.0:
         branchAngle=np.pi
       else:
         branchAngle=np.arccos(cotProduct)
-      
+
       psi=mu*muL*(2*branchAngle/np.pi-1.)
       psi+=2./np.pi*np.sqrt(1-mu*mu)*np.sqrt(1-muL*muL)*np.sin(branchAngle)
-  
-    return psi
-  
 
-  def gDash_rossPsi(self, thetaL, mu):  
+    return psi
+
+
+  def gDash_rossPsi(self, thetaL, mu):
     """ Method to be integrated to find G from gDash
     """
     muL=np.cos(thetaL)
     return self.gDash(muL)*self.rossPsi(muL, mu)
-    
+
 
   def G_integ_gDash(self, mu):
     """Calculate the G function by integrating gDash*rossPsi
     """
-    intg=integrate.quad(self.gDash_rossPsi,0,np.pi/2.,args=(mu,))      
+    intg=integrate.quad(self.gDash_rossPsi,0,np.pi/2.,args=(mu,))
     return intg[0]
 
 
@@ -153,23 +153,23 @@ class leafGeometry( ):
     elif self.JULES_lad=='horizontal':
       return self.G_horizontal(mu)
     else:
-      raise Exception, 'Unknown JULES leaf angle ditribution: '%self.JULES_lad
-      
-      
-      
+      raise Exception('Unknown JULES leaf angle ditribution: '%self.JULES_lad)
+      #print("blah")
+
+
 
   def G_CLM(self,mu):
     """Calculate the G function as used in CLM
-    
+
     Depends on parameter self.CLM_chiL
-    
-    Valid range of chiL is apparently -0.4 to 0.6    
+
+    Valid range of chiL is apparently -0.4 to 0.6
     (although some of CLMs PFT exceed this range).
     See page 24 of CLM TN v3.0
     """
-  
+
     if self.CLM_chiL < -1.0 or self.CLM_chiL > 1.0:
-      raise Exception, "parameter chiL out of range: "%self.CLM_chiL
+      raise Exception("parameter chiL out of range: "%self.CLM_chiL)
 
     return self.CLM_phi1()+self.CLM_phi2()*mu
 
@@ -198,21 +198,21 @@ def test_GFunctions( ):
   GFuncs['Extremophile']=l.gDash_bunnik_extremophile
 
   for func in GFuncs:
-  
+
     l.gDash=GFuncs[func]
     x=[]
     y=[]
-    for theta in xrange(0,90,2):
+    for theta in range(0,90,2):
       mu=np.cos(np.deg2rad(theta))
       x.append(theta)
       y.append(l.G_integ_gDash(mu))
-    
+
     plt.plot(x,y,label=func)
-  
+
   plt.xlabel('zenith angle (degrees)')
   plt.ylabel('g')
   plt.legend()
-  plt.show()  
+  plt.show()
 
 
 def test_gFunctions( ):
@@ -227,25 +227,24 @@ def test_gFunctions( ):
   GFuncs['Extremophile']=l.gDash_bunnik_extremophile
 
   for func in GFuncs:
-  
+
     x=[]
     y=[]
-    for theta in xrange(0,90,2):
+    for theta in range(0,90,2):
       mu=np.cos(np.deg2rad(theta))
       x.append(theta)
       y.append(GFuncs[func](mu))
-    
+
     plt.plot(x,y,label=func)
-  
+
   plt.xlabel('zenith angle (degrees)')
   plt.ylabel('G')
   plt.legend()
-  plt.show()  
+  plt.show()
 
 
 
 if __name__=="__main__":
 
-  test_gFunctions()  
-  test_GFunctions()  
-
+  test_gFunctions()
+  test_GFunctions()
